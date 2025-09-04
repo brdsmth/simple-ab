@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SimpleAB Demo - Automatic A/B Testing</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8fafc;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        header {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #3b82f6;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 0;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #6b7280;
+            margin-bottom: 2rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 1rem 2rem;
+            font-size: 1.125rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem;
+        }
+
+        .btn-control {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-control:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+        }
+
+        .status-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-weight: 500;
+        }
+
+        .status.loading {
+            background-color: #fef3c7;
+            color: #92400e;
+            border: 1px solid #fcd34d;
+        }
+
+        .status.success {
+            background-color: #d1fae5;
+            color: #065f46;
+            border: 1px solid #34d399;
+        }
+
+        .status.error {
+            background-color: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+        }
+
+        .experiment-info {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .experiment-info h3 {
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .experiment-info p {
+            margin-bottom: 0.5rem;
+            color: #6b7280;
+        }
+
+        .debug-section {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .debug-section h3 {
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .btn-secondary {
+            background-color: #6b7280;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #4b5563;
+        }
+
+        .btn-danger {
+            background-color: #dc2626;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b91c1c;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">SimpleAB Demo</div>
+                <div>Automatic A/B Testing</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <section class="hero">
+            <h1>Transform Your Business</h1>
+            <p>Experience the power of automatic A/B testing. Our SDK handles everything - just add the script and watch your conversions improve.</p>
+            <button id="cta-button" class="btn btn-control" onclick="handleCTAClick()">
+                Get Started Today
+            </button>
+        </section>
+
+        <section class="status-section">
+            <h3>SDK Status</h3>
+            <div id="status" class="status loading">Initializing...</div>
+            <div id="experiment-info" class="experiment-info" style="display: none;">
+                <!-- Experiment info will be populated here -->
+            </div>
+        </section>
+
+        <section class="debug-section">
+            <h3>Debug Controls</h3>
+            <p>These controls help you test different variants and see how the SDK works:</p>
+            <button class="btn btn-secondary" onclick="loadAsNewUser()">Load as New User</button>
+            <button class="btn btn-secondary" onclick="simulateVariant()">Refresh Variant</button>
+            <button class="btn btn-danger" onclick="testDirectModification()">Test Direct Modification</button>
+        </section>
+    </div>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 SimpleAB Demo. This page demonstrates automatic A/B testing with zero custom code required.</p>
+        </div>
+    </footer>
+
+    <!-- SimpleAB SDK - This is all you need! -->
+    <script src="http://localhost:9000/dist/simpleab.js"></script>
+    <script>
+        // Global variables
+        const API_BASE_URL = 'http://localhost:3001/api';
+        let currentUser = {
+            id: 'demo-user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9),
+            sessionId: 'session-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9)
+        };
+        let simpleAB = null;
+
+        // Initialize the SDK when page loads - SDK handles all modifications automatically!
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('=== INITIALIZING SIMPLEAB SDK ===');
+            
+            try {
+                updateStatus('Initializing SimpleAB SDK...', 'loading');
+                
+                // Access the SDK instance
+                simpleAB = SimpleAB;
+                
+                // Initialize with API key - SDK will automatically apply modifications
+                await simpleAB.init({
+                    apiKey: getCurrentApiKey(),
+                    apiUrl: API_BASE_URL,
+                    enableLogging: true,
+                    userId: currentUser.id
+                });
+                
+                console.log('SDK initialized. Available experiments:', simpleAB.experiments.size);
+                console.log('User context:', simpleAB.getUserContext());
+                
+                // Show experiment info for debugging
+                if (simpleAB.experiments.size > 0) {
+                    const experimentId = Array.from(simpleAB.experiments.keys())[0];
+                    const experiment = simpleAB.experiments.get(experimentId);
+                    const variant = simpleAB.getVariant(experimentId);
+                    
+                    if (variant) {
+                        showExperimentInfo(experiment, variant);
+                        updateStatus(`Experiment active: ${experiment.name} - ${variant.name}`, 'success');
+                    } else {
+                        updateStatus('No variant assigned', 'success');
+                    }
+                } else {
+                    updateStatus('No active experiments found - create one in the dashboard!', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Initialization failed:', error);
+                updateStatus('Failed to initialize SDK: ' + error.message, 'error');
+            }
+        });
+
+        // Get current API key (replace with your actual project API key)
+        function getCurrentApiKey() {
+            return 'CURRENT_API_KEY';
+        }
+
+        // Handle CTA button clicks
+        function handleCTAClick() {
+            console.log('CTA button clicked!');
+            
+            if (simpleAB) {
+                // Track goal conversion
+                simpleAB.track('goal_conversion', {
+                    goalId: 'cta_click',
+                    value: 1
+                });
+            }
+            
+            updateStatus('CTA clicked! Goal conversion tracked.', 'success');
+        }
+
+        // Update status display
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+        }
+
+        // Show experiment information
+        function showExperimentInfo(experiment, variant) {
+            const infoEl = document.getElementById('experiment-info');
+            infoEl.style.display = 'block';
+            infoEl.innerHTML = `
+                <h3>Active Experiment</h3>
+                <p><strong>Experiment:</strong> ${experiment.name}</p>
+                <p><strong>Variant:</strong> ${variant.name} ${variant.isControl ? '(Control)' : ''}</p>
+                <p><strong>Allocation:</strong> ${(variant.allocation * 100).toFixed(1)}%</p>
+                <p><strong>Modifications:</strong> ${variant.modifications ? 'Applied automatically by SDK' : 'None'}</p>
+            `;
+        }
+
+        // Debug function: Load as new user
+        function loadAsNewUser() {
+            console.log('=== LOADING AS NEW USER ===');
+            
+            // Generate new user ID
+            currentUser.id = 'demo-user-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            console.log('Generated new user ID:', currentUser.id);
+            
+            // Clear SDK assignments and reinitialize
+            if (simpleAB && simpleAB.assignments) {
+                simpleAB.assignments.clear();
+            }
+            
+            // Reinitialize SDK - it will automatically apply new modifications
+            reinitializeSDK();
+        }
+
+        // Debug function: Simulate variant (refresh current assignment)
+        function simulateVariant() {
+            console.log('=== SIMULATING VARIANT ===');
+            if (simpleAB && simpleAB.experiments.size > 0) {
+                const experimentId = Array.from(simpleAB.experiments.keys())[0];
+                const experiment = simpleAB.experiments.get(experimentId);
+                const variant = simpleAB.getVariant(experimentId);
+                
+                if (variant) {
+                    console.log('Current variant:', variant);
+                    showExperimentInfo(experiment, variant);
+                    updateStatus(`Current variant: ${variant.name}`, 'success');
+                } else {
+                    console.log('No variant assigned');
+                    updateStatus('No variant assigned', 'success');
+                }
+            } else {
+                console.log('No experiments available');
+                updateStatus('No experiments available', 'error');
+            }
+        }
+
+        // Debug function: Test direct modification (for debugging only)
+        function testDirectModification() {
+            console.log('=== TESTING DIRECT MODIFICATION ===');
+            const button = document.getElementById('cta-button');
+            if (button) {
+                // Force a style change for testing
+                button.style.cssText = 'background-color: red !important; color: white !important; border: 2px solid darkred !important;';
+                button.textContent = 'DIRECT TEST';
+                console.log('Direct modification applied for testing');
+                updateStatus('Direct modification applied (for testing only)', 'success');
+            } else {
+                console.error('Button not found for direct modification');
+                updateStatus('Button not found for direct modification', 'error');
+            }
+        }
+
+        // Reinitialize SDK with new user context
+        async function reinitializeSDK() {
+            try {
+                console.log('Reinitializing SDK with new user...');
+                updateStatus('Reinitializing with new user...', 'loading');
+                
+                // Reinitialize SDK - it will automatically apply modifications
+                await simpleAB.init({
+                    apiKey: getCurrentApiKey(),
+                    apiUrl: API_BASE_URL,
+                    enableLogging: true,
+                    userId: currentUser.id
+                });
+                
+                // Show experiment info
+                if (simpleAB.experiments.size > 0) {
+                    const experimentId = Array.from(simpleAB.experiments.keys())[0];
+                    const experiment = simpleAB.experiments.get(experimentId);
+                    const variant = simpleAB.getVariant(experimentId);
+                    
+                    if (variant) {
+                        showExperimentInfo(experiment, variant);
+                        updateStatus(`New user loaded: ${variant.name}`, 'success');
+                    } else {
+                        updateStatus('New user loaded: No variant assigned', 'success');
+                    }
+                } else {
+                    updateStatus('New user loaded: No experiments available', 'success');
+                }
+                
+            } catch (error) {
+                console.error('Reinitialization failed:', error);
+                updateStatus('Failed to reinitialize: ' + error.message, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
