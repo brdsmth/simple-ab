@@ -1,0 +1,53 @@
+.header {
+  background-color: white;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 0 2rem;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header-left {
+  flex: 1;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.user-name {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .header {
+    padding: 0 1rem;
+    order: 1;
+  }
+  
+  .header-title {
+    font-size: 1.25rem;
+  }
+  
+  .user-name {
+    display: none;
+  }
+}

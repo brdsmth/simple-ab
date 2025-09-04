@@ -1,0 +1,29 @@
+.layout {
+  display: flex;
+  height: 100vh;
+  background-color: #f8fafc;
+}
+
+.layout-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  background-color: #f8fafc;
+}
+
+@media (max-width: 768px) {
+  .layout {
+    flex-direction: column;
+  }
+  
+  .layout-content {
+    padding: 1rem;
+  }
+}
