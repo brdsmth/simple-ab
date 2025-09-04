@@ -1,0 +1,174 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../server/node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  password  String
+  role      String   @default("USER") // USER, ADMIN
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  projects    Project[]
+  experiments Experiment[]
+
+  @@map("users")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  domain      String
+  apiKey      String   @unique @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  userId      String
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  experiments Experiment[]
+
+  @@map("projects")
+}
+
+model Experiment {
+  id                String   @id @default(cuid())
+  name              String
+  description       String?
+  hypothesis        String?
+  status            String   @default("DRAFT") // DRAFT, RUNNING, PAUSED, COMPLETED, ARCHIVED
+  trafficAllocation Float    @default(1.0) // 0.0 to 1.0
+  startDate         DateTime?
+  endDate           DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // Targeting (stored as JSON string)
+  targetingRules String?
+  
+  // Statistical settings
+  confidenceLevel   Float @default(0.95)
+  minimumSampleSize Int   @default(1000)
+
+  // Relations
+  projectId String
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id])
+
+  variants Variant[]
+  events   Event[]
+  goals    Goal[]
+
+  @@map("experiments")
+}
+
+model Variant {
+  id          String @id @default(cuid())
+  name        String
+  description String?
+  isControl   Boolean @default(false)
+  allocation  Float   @default(0.5) // Traffic allocation for this variant
+  
+  // Content modifications (stored as JSON string)
+  modifications String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  experimentId String
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  events Event[]
+
+  @@map("variants")
+}
+
+model Goal {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  type        String   // PAGE_VIEW, CLICK, CUSTOM_EVENT, REVENUE
+  
+  // Goal configuration
+  selector    String? // CSS selector for click goals
+  url         String? // URL pattern for page view goals
+  eventName   String? // Custom event name
+  
+  isPrimary   Boolean @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  experimentId String
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  events Event[]
+
+  @@map("goals")
+}
+
+model Event {
+  id        String    @id @default(cuid())
+  sessionId String
+  userId    String?   // Optional user ID if available
+  timestamp DateTime  @default(now())
+  
+  // Event data
+  type      String    // EXPERIMENT_VIEW, GOAL_CONVERSION, CUSTOM
+  value     Float?    // For revenue/numeric goals
+  properties String?  // Additional event properties (JSON string)
+  
+  // User agent and context
+  userAgent String?
+  ip        String?
+  country   String?
+  device    String?
+  browser   String?
+
+  // Relations
+  experimentId String
+  experiment   Experiment @relation(fields: [experimentId], references: [id], onDelete: Cascade)
+  
+  variantId String?
+  variant   Variant? @relation(fields: [variantId], references: [id])
+  
+  goalId String?
+  goal   Goal?   @relation(fields: [goalId], references: [id])
+
+  @@map("events")
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  sessionId String   @unique
+  userId    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Session context
+  userAgent String?
+  ip        String?
+  country   String?
+  device    String?
+  browser   String?
+  
+  // Experiment assignments (stored as JSON string)
+  assignments String? // { experimentId: variantId }
+
+  @@map("sessions")
+}
