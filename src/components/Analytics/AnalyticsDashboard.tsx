@@ -1,165 +1,33 @@
 import React, { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import StatisticalAnalysis from './StatisticalAnalysis'
+import { analyticsService, ProcessedAnalyticsData } from '../../services/analyticsService'
 import './AnalyticsDashboard.css'
-
-interface AnalyticsData {
-  experimentId: string
-  experimentName: string
-  startDate: string
-  status: 'running' | 'paused' | 'completed'
-  totalVisitors: number
-  totalConversions: number
-  overallConversionRate: number
-  variants: VariantData[]
-  timeSeriesData: TimeSeriesPoint[]
-  deviceBreakdown: DeviceData[]
-  geoData: GeoData[]
-  goalBreakdown: GoalData[]
-}
-
-interface VariantData {
-  id: string
-  name: string
-  isControl: boolean
-  visitors: number
-  conversions: number
-  conversionRate: number
-  allocation: number
-  revenue?: number
-  standardError: number
-  confidenceInterval: [number, number]
-}
-
-interface TimeSeriesPoint {
-  date: string
-  timestamp: number
-  control: number
-  variant: number
-  controlConversions: number
-  variantConversions: number
-}
-
-interface DeviceData {
-  device: string
-  visitors: number
-  conversions: number
-  conversionRate: number
-}
-
-interface GeoData {
-  country: string
-  visitors: number
-  conversions: number
-  conversionRate: number
-}
-
-interface GoalData {
-  goalName: string
-  conversions: number
-  value: number
-}
 
 interface AnalyticsDashboardProps {
   experimentId: string
 }
 
 const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ experimentId }) => {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
+  const [analyticsData, setAnalyticsData] = useState<ProcessedAnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedTimeRange, setSelectedTimeRange] = useState('7d')
   const [autoRefresh, setAutoRefresh] = useState(true)
 
-  // Mock data - in a real app, this would come from your API
-  const generateMockData = (): AnalyticsData => {
-    const startDate = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000)
-    const timeSeriesData: TimeSeriesPoint[] = []
-    
-    // Generate time series data
-    for (let i = 0; i < 14; i++) {
-      const date = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000)
-      const baseVisitors = 100 + Math.random() * 50
-      const controlVisitors = baseVisitors * 0.5
-      const variantVisitors = baseVisitors * 0.5
-      
-      timeSeriesData.push({
-        date: date.toISOString().split('T')[0],
-        timestamp: date.getTime(),
-        control: controlVisitors,
-        variant: variantVisitors,
-        controlConversions: controlVisitors * (0.025 + Math.random() * 0.01),
-        variantConversions: variantVisitors * (0.035 + Math.random() * 0.015)
-      })
-    }
-
-    const totalControlVisitors = timeSeriesData.reduce((sum, point) => sum + point.control, 0)
-    const totalVariantVisitors = timeSeriesData.reduce((sum, point) => sum + point.variant, 0)
-    const totalControlConversions = timeSeriesData.reduce((sum, point) => sum + point.controlConversions, 0)
-    const totalVariantConversions = timeSeriesData.reduce((sum, point) => sum + point.variantConversions, 0)
-
-    return {
-      experimentId,
-      experimentName: 'Homepage Hero Button Test',
-      startDate: startDate.toISOString(),
-      status: 'running',
-      totalVisitors: Math.round(totalControlVisitors + totalVariantVisitors),
-      totalConversions: Math.round(totalControlConversions + totalVariantConversions),
-      overallConversionRate: ((totalControlConversions + totalVariantConversions) / (totalControlVisitors + totalVariantVisitors)) * 100,
-      variants: [
-        {
-          id: 'control',
-          name: 'Control (Blue Button)',
-          isControl: true,
-          visitors: Math.round(totalControlVisitors),
-          conversions: Math.round(totalControlConversions),
-          conversionRate: (totalControlConversions / totalControlVisitors) * 100,
-          allocation: 50,
-          revenue: Math.round(totalControlConversions * 29.99),
-          standardError: 0.5,
-          confidenceInterval: [2.1, 3.4]
-        },
-        {
-          id: 'variant-a',
-          name: 'Variant A (Green Button)',
-          isControl: false,
-          visitors: Math.round(totalVariantVisitors),
-          conversions: Math.round(totalVariantConversions),
-          conversionRate: (totalVariantConversions / totalVariantVisitors) * 100,
-          allocation: 50,
-          revenue: Math.round(totalVariantConversions * 29.99),
-          standardError: 0.6,
-          confidenceInterval: [3.2, 4.8]
-        }
-      ],
-      timeSeriesData,
-      deviceBreakdown: [
-        { device: 'Desktop', visitors: 1200, conversions: 45, conversionRate: 3.75 },
-        { device: 'Mobile', visitors: 800, conversions: 28, conversionRate: 3.5 },
-        { device: 'Tablet', visitors: 200, conversions: 6, conversionRate: 3.0 }
-      ],
-      geoData: [
-        { country: 'United States', visitors: 1500, conversions: 55, conversionRate: 3.67 },
-        { country: 'United Kingdom', visitors: 400, conversions: 14, conversionRate: 3.5 },
-        { country: 'Canada', visitors: 300, conversions: 10, conversionRate: 3.33 }
-      ],
-      goalBreakdown: [
-        { goalName: 'Button Click', conversions: 79, value: 79 },
-        { goalName: 'Sign Up', conversions: 45, value: 1347 },
-        { goalName: 'Purchase', conversions: 12, value: 359.88 }
-      ]
-    }
-  }
-
+  // Load analytics data from API
   useEffect(() => {
     const loadAnalytics = async () => {
       setLoading(true)
+      setError(null)
+      
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        const data = generateMockData()
-        setAnalyticsData(data)
-      } catch (error) {
-        console.error('Failed to load analytics:', error)
+        const rawData = await analyticsService.fetchExperimentAnalytics(experimentId)
+        const processedData = analyticsService.processAnalyticsData(rawData, selectedTimeRange)
+        setAnalyticsData(processedData)
+      } catch (err: any) {
+        console.error('Failed to load analytics:', err)
+        setError(err.message || 'Failed to load analytics data')
       } finally {
         setLoading(false)
       }
@@ -168,19 +36,23 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ experimentId })
     loadAnalytics()
   }, [experimentId, selectedTimeRange])
 
+  // Auto-refresh functionality
   useEffect(() => {
     if (!autoRefresh) return
 
-    const interval = setInterval(() => {
-      if (analyticsData) {
-        // Simulate real-time updates
-        const updatedData = generateMockData()
-        setAnalyticsData(updatedData)
+    const interval = setInterval(async () => {
+      try {
+        const rawData = await analyticsService.fetchExperimentAnalytics(experimentId)
+        const processedData = analyticsService.processAnalyticsData(rawData, selectedTimeRange)
+        setAnalyticsData(processedData)
+      } catch (err) {
+        console.error('Failed to refresh analytics:', err)
+        // Don't update error state for refresh failures to avoid disrupting the UI
       }
     }, 30000) // Refresh every 30 seconds
 
     return () => clearInterval(interval)
-  }, [autoRefresh, analyticsData])
+  }, [autoRefresh, experimentId, selectedTimeRange])
 
   if (loading) {
     return (
@@ -191,10 +63,25 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ experimentId })
     )
   }
 
+  if (error) {
+    return (
+      <div className="analytics-error">
+        <h3>Failed to load analytics data</h3>
+        <p>{error}</p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="btn btn-primary"
+        >
+          Retry
+        </button>
+      </div>
+    )
+  }
+
   if (!analyticsData) {
     return (
       <div className="analytics-error">
-        <p>Failed to load analytics data</p>
+        <p>No analytics data available</p>
       </div>
     )
   }
@@ -287,22 +174,17 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ experimentId })
                 formatter={(value: number, name: string) => [`${value.toFixed(2)}%`, name]}
               />
               <Legend />
-              <Line 
-                type="monotone" 
-                dataKey="controlConversions" 
-                stroke="#3b82f6" 
-                strokeWidth={2}
-                name="Control"
-                dot={{ fill: '#3b82f6', strokeWidth: 2 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="variantConversions" 
-                stroke="#10b981" 
-                strokeWidth={2}
-                name="Variant A"
-                dot={{ fill: '#10b981', strokeWidth: 2 }}
-              />
+              {analyticsData.variants.map((variant, index) => (
+                <Line 
+                  key={variant.id}
+                  type="monotone" 
+                  dataKey={`${variant.id}_rate`}
+                  stroke={COLORS[index % COLORS.length]} 
+                  strokeWidth={2}
+                  name={variant.name}
+                  dot={{ fill: COLORS[index % COLORS.length], strokeWidth: 2 }}
+                />
+              ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -364,45 +246,13 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ experimentId })
         </div>
       </div>
 
-      {/* Device & Geography Breakdown */}
+      {/* Device & Geography Breakdown - Coming Soon */}
       <div className="breakdown-section">
         <div className="chart-section">
-          <h3>Device Breakdown</h3>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={analyticsData.deviceBreakdown}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ device, conversionRate }) => `${device}: ${conversionRate.toFixed(1)}%`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="visitors"
-                >
-                  {analyticsData.deviceBreakdown.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        <div className="chart-section">
-          <h3>Geographic Performance</h3>
-          <div className="chart-container">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={analyticsData.geoData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="country" />
-                <YAxis tickFormatter={(value) => `${value.toFixed(1)}%`} />
-                <Tooltip formatter={(value: number) => [`${value.toFixed(2)}%`, 'Conversion Rate']} />
-                <Bar dataKey="conversionRate" fill="#3b82f6" />
-              </BarChart>
-            </ResponsiveContainer>
+          <h3>Device & Geographic Breakdown</h3>
+          <div className="coming-soon">
+            <p>📊 Device and geographic analytics coming soon!</p>
+            <small>We're working on adding detailed device and location-based performance metrics.</small>
           </div>
         </div>
       </div>
@@ -411,7 +261,7 @@ const AnalyticsDashboard: React.FC<AnalyticsDashboardProps> = ({ experimentId })
       <div className="chart-section">
         <h3>Goal Conversions</h3>
         <div className="goals-grid">
-          {analyticsData.goalBreakdown.map((goal, index) => (
+          {analyticsData.goalBreakdown.map((goal) => (
             <div key={goal.goalName} className="goal-card">
               <h4>{goal.goalName}</h4>
               <div className="goal-metrics">
