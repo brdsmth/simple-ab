@@ -1,0 +1,197 @@
+.modification-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-label-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.button-group {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 14px;
+}
+
+.form-input {
+  padding: 10px 12px;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+  font-family: inherit;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-input select {
+  cursor: pointer;
+}
+
+.style-properties,
+.attributes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.style-property-row,
+.attribute-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.style-property-row .form-input,
+.attribute-row .form-input {
+  flex: 1;
+}
+
+.style-property-row .form-input:first-child {
+  min-width: 150px;
+  flex: 0 0 150px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-outline {
+  background: white;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+}
+
+.btn-outline:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn-danger {
+  background: #ef4444;
+  color: white;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.btn-danger:hover {
+  background: #dc2626;
+}
+
+.json-preview {
+  background: #f9fafb;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+  color: #374151;
+  resize: vertical;
+}
+
+.json-preview:focus {
+  border-color: #d1d5db;
+  box-shadow: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .style-property-row,
+  .attribute-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .style-property-row .form-input:first-child {
+    min-width: unset;
+    flex: 1;
+  }
+  
+  .btn-danger {
+    align-self: flex-end;
+    width: auto;
+    padding: 6px 12px;
+  }
+}
+
+/* Form validation styles */
+.form-input:invalid {
+  border-color: #ef4444;
+}
+
+.form-input:invalid:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Improved select styling */
+select.form-input {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 8px center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  padding-right: 32px;
+  appearance: none;
+}
+
+/* Hover effects for better UX */
+.style-property-row:hover,
+.attribute-row:hover {
+  background: rgba(59, 130, 246, 0.02);
+  border-radius: 6px;
+  padding: 4px;
+  margin: -4px;
+}
+
+/* Focus-within for better accessibility */
+.form-group:focus-within .form-label {
+  color: #3b82f6;
+}
+
+/* Loading state for select element button */
+.btn-outline:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-outline:disabled:hover {
+  background: white;
+  color: #3b82f6;
+}

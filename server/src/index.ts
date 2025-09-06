@@ -7,6 +7,7 @@ import authRoutes from './routes/auth'
 import experimentRoutes from './routes/experiments'
 import projectRoutes from './routes/projects'
 import analyticsRoutes from './routes/analytics'
+import proxyRoutes from './routes/proxy'
 
 const app = express()
 const prisma = new PrismaClient()
@@ -44,6 +45,7 @@ app.use('/api/auth', authRoutes)
 app.use('/api/experiments', experimentRoutes)
 app.use('/api/projects', projectRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/proxy', proxyRoutes)
 
 // Error handling middleware
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

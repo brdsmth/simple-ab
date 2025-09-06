@@ -11,6 +11,7 @@ import Projects from './pages/Projects'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import ElementSelectorPage from './pages/ElementSelectorPage'
 import './App.css'
 
 // Protected Route Component
@@ -50,6 +51,9 @@ function App() {
             <Register />
           </PublicRoute>
         } />
+        
+        {/* Element Selector - Public route for external website access */}
+        <Route path="/element-selector" element={<ElementSelectorPage />} />
         
         {/* Protected Routes */}
         <Route path="/" element={

@@ -658,6 +658,28 @@
   margin-right: 0.25rem;
 }
 
+/* Form enhancements for element selector */
+.form-label-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.form-label-with-button .form-label {
+  margin-bottom: 0;
+}
+
+.form-label-with-button .btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .variants-grid {

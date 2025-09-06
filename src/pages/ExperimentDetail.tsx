@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import AnalyticsDashboard from '../components/Analytics/AnalyticsDashboard'
 import { getToken } from '../services/authService'
+import ModificationForm from '../components/ModificationForm/ModificationForm'
 import './ExperimentDetail.css'
 
 interface Variant {
@@ -84,6 +85,63 @@ const ExperimentDetail: React.FC = () => {
   })
   const [variantFormError, setVariantFormError] = useState('')
   const [editVariantFormError, setEditVariantFormError] = useState('')
+
+  // Element selector functionality
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'ELEMENT_SELECTED') {
+        const { selector, tagName, textContent } = event.data.data
+        
+        // Create a basic modification template based on the selected element
+        const modification = {
+          selector: selector,
+          changes: {
+            style: {
+              // Add some default style changes based on element type
+              ...(tagName === 'button' || tagName === 'a' ? {
+                'background-color': '#3b82f6',
+                'color': '#ffffff'
+              } : {}),
+              ...(tagName === 'h1' || tagName === 'h2' || tagName === 'h3' ? {
+                'color': '#1f2937'
+              } : {})
+            },
+            ...(textContent ? { text: textContent } : {}),
+            attributes: {
+              'data-variant': 'modified'
+            }
+          }
+        }
+        
+        // Update the appropriate form based on which modal is open
+        if (showAddVariant) {
+          setVariantForm(prev => ({
+            ...prev,
+            modifications: JSON.stringify(modification, null, 2)
+          }))
+        } else if (editingVariant) {
+          setEditVariantForm(prev => ({
+            ...prev,
+            modifications: JSON.stringify(modification, null, 2)
+          }))
+        }
+      }
+    }
+    
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [showAddVariant, editingVariant])
+
+  const openElementSelector = (websiteUrl?: string) => {
+    const selectorUrl = new URL('/element-selector', window.location.origin)
+    if (websiteUrl) {
+      selectorUrl.searchParams.set('url', websiteUrl)
+      selectorUrl.searchParams.set('autoLoad', 'true')
+    }
+    
+    // Open in a new tab (not popup window)
+    window.open(selectorUrl.toString(), '_blank')
+  }
 
   useEffect(() => {
     if (id) {
@@ -936,27 +994,11 @@ const ExperimentDetail: React.FC = () => {
                   </div>
 
               <div className="form-group">
-                <label htmlFor="variant-modifications" className="form-label">
-                  Modifications (JSON)
-                </label>
-                <textarea
-                  id="variant-modifications"
+                <label className="form-label">Modifications</label>
+                <ModificationForm
                   value={variantForm.modifications}
-                  onChange={(e) => setVariantForm({...variantForm, modifications: e.target.value})}
-                  className="form-input"
-                  rows={8}
-                  placeholder={JSON.stringify({
-                    selector: '#cta-button',
-                    changes: {
-                      style: {
-                        'background-color': '#10b981'
-                      },
-                      text: 'New Button Text',
-                      attributes: {
-                        'data-variant': 'test'
-                      }
-                    }
-                  }, null, 2)}
+                  onChange={(value) => setVariantForm({...variantForm, modifications: value})}
+                  onSelectElement={() => openElementSelector(experiment?.project?.domain)}
                 />
                 {variantFormError && (
                   <div className="form-error">
@@ -1064,39 +1106,17 @@ const ExperimentDetail: React.FC = () => {
               </div>
 
               <div className="form-group">
-                <label htmlFor="editVariantModifications" className="form-label">
-                  Modifications (JSON)
-                </label>
-                <textarea
-                  id="editVariantModifications"
+                <label className="form-label">Modifications</label>
+                <ModificationForm
                   value={editVariantForm.modifications}
-                  onChange={(e) => setEditVariantForm({...editVariantForm, modifications: e.target.value})}
-                  className="form-textarea"
-                  rows={12}
-                  placeholder={JSON.stringify({
-                    selector: '#cta-button',
-                    style: {
-                      'background-color': '#10b981'
-                    },
-                    text: 'Updated Button Text',
-                    attributes: {
-                      'data-variant': 'updated'
-                    }
-                  }, null, 2)}
+                  onChange={(value) => setEditVariantForm({...editVariantForm, modifications: value})}
+                  onSelectElement={() => openElementSelector(experiment?.project?.domain)}
                 />
                 {editVariantFormError && (
                   <div className="form-error">
                     {editVariantFormError}
                   </div>
                 )}
-                <p className="form-help">
-                  <strong>Flexible A/B Testing Structure:</strong><br/>
-                  • <code>selector</code>: CSS selector (e.g., '#button', '.hero-text', 'h1')<br/>
-                  • <code>style</code>: CSS properties to modify<br/>
-                  • <code>text</code>: Change element text content<br/>
-                  • <code>attributes</code>: Set HTML attributes<br/>
-                  • <code>visibility</code>: 'visible' or 'hidden'
-                </p>
               </div>
 
               <div className="form-group">
